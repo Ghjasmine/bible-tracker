@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="讀完聖經">
+<title>讀完聖經 — 66卷全追蹤</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--bg2:#f5f5f3;--bg3:#eae9e4;
+  --text:#111;--text2:#555;--text3:#999;
+  --border:#e0dfd8;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-bdr:#bfdbfe;
+  --green:#0f6e56;--green-bg:#e1f5ee;--green-bdr:#9fe1cb;
+  --amber:#854f0b;--amber-bg:#faeeda;--amber-bdr:#f0cf9a;
+  --r:8px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+    --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+    --border:#3a3a3c;
+    --blue:#60a5fa;--blue-bg:#1e3a5f;--blue-bdr:#2563eb;
+    --green:#5dcaa5;--green-bg:#083428;--green-bdr:#0f6e56;
+    --amber:#fac775;--amber-bg:#3d2200;--amber-bdr:#854f0b;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;min-height:100vh}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:.5px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:99}
+.nb{flex:1;border:none;background:none;color:var(--text3);font-size:10px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-family:inherit}
+.nb.on{color:var(--blue)}
+.nb svg{width:22px;height:22px;stroke-width:1.8;fill:none;stroke:currentColor}
+
+/* ── PANELS ── */
+.panel{display:none;padding:12px 14px}
+.panel.on{display:block}
+
+/* ── DASHBOARD ── */
+.hero{background:var(--bg2);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center}
+.hero-num{font-size:48px;font-weight:700;color:var(--blue);line-height:1}
+.hero-sub{font-size:13px;color:var(--text2);margin-top:4px}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:var(--bg2);border-radius:var(--r);padding:10px;text-align:center}
+.stat-n{font-size:20px;font-weight:600}
+.stat-l{font-size:10px;color:var(--text3);margin-top:2px}
+.prog-wrap{margin-bottom:12px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
+.prog-bg{height:7px;background:var(--bg3);border-radius:8px;overflow:hidden}
+.prog-fill{height:100%;border-radius:8px;transition:width .4s}
+
+/* ── NEXT CARD ── */
+.now-card{border-radius:14px;padding:16px;margin-bottom:10px;border:1.5px solid var(--blue-bdr);background:var(--blue-bg)}
+.now-tag{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
+.now-book{font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px}
+.now-ch{font-size:14px;color:var(--text2);margin-bottom:10px}
+.now-key{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6;padding:8px 10px;background:var(--bg);border-radius:var(--r)}
+.btn-row{display:flex;gap:8px}
+.btn-watch{flex:1;background:var(--blue);color:#fff;border:none;border-radius:var(--r);padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-done{background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-done:active{opacity:.8}
+
+/* ── STREAK ── */
+.streak-row{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.dot{width:22px;height:22px;border-radius:50%;background:var(--bg3)}
+.dot.hit{background:var(--blue)}
+.dot-sub{font-size:9px;color:var(--text3);text-align:center;margin-top:1px}
+
+/* ── BOOK LIST ── */
+.sec{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin:14px 0 8px}
+.testament-header{font-size:13px;font-weight:700;color:var(--text);padding:10px 0 6px;border-bottom:.5px solid var(--border);margin-bottom:4px}
+.book-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid var(--border);cursor:pointer;-webkit-user-select:none}
+.book-row:active{background:var(--bg2)}
+.bk-check{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.bk-check.done{background:var(--green);border-color:var(--green)}
+.bk-check.partial{border-color:var(--amber);background:var(--amber-bg)}
+.bk-info{flex:1;min-width:0}
+.bk-name{font-size:14px;font-weight:600;color:var(--text)}
+.bk-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.bk-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.bk-cnt{font-size:12px;color:var(--text3)}
+.bk-pct{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.pct-done{background:var(--green-bg);color:var(--green)}
+.pct-part{background:var(--amber-bg);color:var(--amber)}
+.pct-none{background:var(--bg3);color:var(--text3)}
+
+/* ── CHAPTER VIEW (in book detail) ── */
+.back-btn{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--blue);background:none;border:none;cursor:pointer;padding:2px 0 12px;font-family:inherit}
+.ch-card{background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;transition:border-color .15s}
+.ch-card.active{border-color:var(--blue)}
+.ch-card.done-card{border-color:var(--green-bdr);background:var(--green-bg)}
+.ch-top{display:flex;align-items:center;gap:10px;margin-bottom:0}
+.ch-ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ch-ck.done{background:var(--green);border-color:var(--green)}
+.ch-ck svg{width:12px;height:12px;stroke:white;stroke-width:2.5;display:none}
+.ch-ck.done svg{display:block}
+.ch-num{font-size:14px;font-weight:600;flex:1}
+.ch-num.done-txt{color:var(--green);text-decoration:line-through;text-decoration-color:var(--green)}
+.ch-watch{font-size:11px;color:var(--blue);border:.5px solid var(--blue-bdr);border-radius:var(--r);padding:3px 8px;background:var(--blue-bg);white-space:nowrap;text-decoration:none}
+.ch-detail{margin-top:8px;padding-top:8px;border-top:.5px solid var(--border);display:none}
+.ch-card.active .ch-detail{display:block}
+.ch-key{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:6px}
+.ch-apply{font-size:11px;color:var(--text3);line-height:1.5}
+.ch-mark-btn{margin-top:10px;width:100%;padding:9px;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.ch-mark-btn.undone{background:var(--green);color:#fff}
+.ch-mark-btn.redone{background:var(--bg3);color:var(--text2)}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-input{width:100%;padding:10px 14px 10px 36px;border:.5px solid var(--border);border-radius:var(--r);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;outline:none}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+
+.reset-area{text-align:center;padding:20px 0}
+.reset-btn{background:none;border:.5px solid var(--border);border-radius:var(--r);padding:7px 16px;font-size:12px;color:var(--text3);cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <button class="nb on" onclick="goTab('dash',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    進度
+  </button>
+  <button class="nb" onclick="goTab('books',this)">
+    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    書卷
+  </button>
+  <button class="nb" onclick="goTab('search',this)">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    搜尋
+  </button>
+</nav>
+
+<!-- ── DASH ── -->
+<div id="tab-dash" class="panel on">
+  <div class="hero">
+    <div class="hero-num" id="d-pct">0%</div>
+    <div class="hero-sub">已完成 <span id="d-done">0</span> / <span id="d-total">1189</span> 章</div>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n" id="d-books">0</div><div class="stat-l">書卷完成</div></div>
+    <div class="stat"><div class="stat-n" id="d-streak">0</div><div class="stat-l">連續天</div></div>
+    <div class="stat"><div class="stat-n" id="d-left">1189</div><div class="stat-l">剩餘章數</div></div>
+  </div>
+
+  <div id="now-section"></div>
+
+  <div class="sec">本週打卡</div>
+  <div class="streak-row" id="streak-dots"></div>
+
+  <div class="sec">書卷進度</div>
+  <div class="prog-wrap">
+    <div class="prog-lbl"><span>舊約</span><span id="p-ot-txt"></span></div>
+    <div class="prog-bg"><div class="prog-fill" id="p-ot" style="width:0%;background:var(--amber)"></div></div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-lbl"><span>新約</span><span id="p-nt-txt"></span></div>
+    <div class="prog-bg"><div class="prog-fill" id="p-nt" style="width:0%;background:var(--blue)"></div></div>
+  </div>
+
+  <div class="reset-area"><button class="reset-btn" onclick="doReset()">⟲ 清除所有進度</button></div>
+</div>
+
+<!-- ── BOOKS ── -->
+<div id="tab-books" class="panel">
+  <div id="book-list-view">
+    <div id="book-list"></div>
+  </div>
+  <div id="book-detail-view" style="display:none">
+    <button class="back-btn" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2"><polyline points="15 18 9 12 15 6"/></svg>
+      返回書卷
+    </button>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ── SEARCH ── -->
+<div id="tab-search" class="panel">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" placeholder="搜尋書卷名稱..." oninput="doSearch(this.value)">
+  </div>
+  <div id="search-results"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// 66 卷聖經完整資料
+// playlist = JAM 頻道各書卷播放清單
+// chapters = 章數, key = 全書核心主題
+// ════════════════════════════════════════════════
+const BIBLE=[
+  // ── 舊約 ──
+  {id:"gen",name:"創世記",abbr:"創",testament:"OT",chapters:50,playlist:"PLFZQax_1Kmu3m97SG_7HdOghMU9_WzX82",key:"起源與揀選——創造、墮落、洪水、亞伯拉罕之約、約瑟的故事，神救贖計畫的起點"},
+  {id:"exo",name:"出埃及記",abbr:"出",testament:"OT",chapters:40,playlist:"PLsNJO0nl_IhSKDsllyYN8K4tVdfkt2YWL",key:"救贖與立約——出埃及、過紅海、十誡、會幕，神親自拯救祂的子民"},
+  {id:"lev",name:"利未記",abbr:"利",testament:"OT",chapters:27,playlist:"PLFZQax_1Kmu1crMhsMGOIIYG5DPyYDPZq",key:"聖潔與祭司——五種獻祭、贖罪日、潔淨條例，「你們要聖潔，因為我是聖潔的」"},
+  {id:"num",name:"民數記",abbr:"民",testament:"OT",chapters:36,playlist:"PLFZQax_1Kmu39eTYKSKiLBPP3U0YSRQWW",key:"曠野漂流——不信導致四十年流浪，神的信實在人的悖逆中仍不改變"},
+  {id:"deu",name:"申命記",abbr:"申",testament:"OT",chapters:34,playlist:"PLFZQax_1Kmu3V1MPAKmCYPVF0g4nK5ADf",key:"愛神順服——摩西臨別講論，「盡心盡性盡力愛耶和華你的神」"},
+  {id:"jos",name:"約書亞記",abbr:"書",testament:"OT",chapters:24,playlist:"PLFZQax_1Kmu1fGSBfA-rBWQRSBTTJbR1n",key:"進入應許——攻取迦南、分配土地，「你當剛強壯膽，不要懼怕」"},
+  {id:"jdg",name:"士師記",abbr:"士",testament:"OT",chapters:21,playlist:"PLFZQax_1Kmu1gf8xnP7RzPBMXLb5VUCAP",key:"循環悖逆——各人任意而行，神興起士師拯救，記載屬靈領導缺失的後果"},
+  {id:"rut",name:"路得記",abbr:"得",testament:"OT",chapters:4,playlist:"PLFZQax_1Kmu1FqGH8wbI5kFOxvq3x3MiY",key:"忠誠救贖——摩押女子路得跟隨拿俄米，波阿斯贖回，大衛王的曾祖母"},
+  {id:"1sa",name:"撒母耳記上",abbr:"撒上",testament:"OT",chapters:31,playlist:"PLFZQax_1Kmu1pJ9r0wI0sGJyyCXvbKBd4",key:"從士師到王國——撒母耳、掃羅、大衛，「聽命勝於獻祭」"},
+  {id:"2sa",name:"撒母耳記下",abbr:"撒下",testament:"OT",chapters:24,playlist:"PLFZQax_1Kmu2FpEXuOWuBJv5eLJDhqopW",key:"大衛之約——統一王國、大衛犯罪與管教，彌賽亞盼望的根基"},
+  {id:"1ki",name:"列王紀上",abbr:"王上",testament:"OT",chapters:22,playlist:"PLFZQax_1Kmu2b6j0SzCb7GmMdtaTTNFlR",key:"所羅門與分裂——聖殿建成，王國南北分裂，以利亞的事奉"},
+  {id:"2ki",name:"列王紀下",abbr:"王下",testament:"OT",chapters:25,playlist:"PLFZQax_1Kmu1eMl6PNIDnKmxr2BI6nOGS",key:"亡國警告——以色列被擄亞述，猶大被擄巴比倫，悖逆的終點"},
+  {id:"1ch",name:"歷代志上",abbr:"代上",testament:"OT",chapters:29,playlist:"PLFZQax_1Kmu0bHMBBsBvb_6Dc10D31tRJ",key:"家譜與聖殿——從亞當到大衛，重建信仰認同，強調神的揀選與忠信"},
+  {id:"2ch",name:"歷代志下",abbr:"代下",testament:"OT",chapters:36,playlist:"PLFZQax_1Kmu3KfzeLJr0OLFu8QKPMvFk7",key:"聖殿與敬拜——所羅門到亡國，強調敬拜與謙卑求神的重要性"},
+  {id:"ezr",name:"以斯拉記",abbr:"拉",testament:"OT",chapters:10,playlist:"PLFZQax_1Kmu1XicfneTLl-k7bXBjFeFa6",key:"歸回重建——被擄後歸回、重建聖殿，屬靈復興從神的話語開始"},
+  {id:"neh",name:"尼希米記",abbr:"尼",testament:"OT",chapters:13,playlist:"PLFZQax_1Kmu2dXJOYW20wTsGS5K8sF8dA",key:"重建城牆——禱告行動領導學，「我們禱告我們的神，又因他們的緣故派人看守」"},
+  {id:"est",name:"以斯帖記",abbr:"斯",testament:"OT",chapters:10,playlist:"PLFZQax_1Kmu3GxRzJFX0TOuGhtnYXBzUx",key:"隱藏的神——沒有神字卻充滿神護理，「焉知你得王后的位分不是為現今的機會？」"},
+  {id:"job",name:"約伯記",abbr:"伯",testament:"OT",chapters:42,playlist:"PLFZQax_1Kmu0IhDCRkGHPfQ1S_5ZaHXN_",key:"苦難與神的主權——「我知道我的救贖主活著」，苦難不等於罪的懲罰"},
+  {id:"psa",name:"詩篇",abbr:"詩",testament:"OT",chapters:150,playlist:"PLFZQax_1Kmu3Nt8b1UIHsPOGPh_m5fY1G",key:"敬拜禱告詩集——喜樂、哀歌、讚美、懺悔，最常被引用的舊約書卷"},
+  {id:"pro",name:"箴言",abbr:"箴",testament:"OT",chapters:31,playlist:"PLFZQax_1Kmu1pNXcLlpM2BI3bwnJV_QJo",key:"生活智慧——「敬畏耶和華是智慧的開端」，職場、家庭、人際的實踐指引"},
+  {id:"ecc",name:"傳道書",abbr:"傳",testament:"OT",chapters:12,playlist:"PLFZQax_1Kmu1O6kqMVW5JlVH-aJIrITBt",key:"虛空的探索——「日光之下並無新事」，追求意義必須回到敬畏神"},
+  {id:"sng",name:"雅歌",abbr:"歌",testament:"OT",chapters:8,playlist:"PLFZQax_1Kmu2ViqxLHNL-VVZN2J9J7cBt",key:"愛情詩集——男女之愛的頌歌，預表基督與教會的關係"},
+  {id:"isa",name:"以賽亞書",abbr:"賽",testament:"OT",chapters:66,playlist:"PLFZQax_1Kmu3u5V3PfbXHcP1ZruS8QXZ0",key:"審判與安慰——「受苦的僕人」預言彌賽亞，「那些仰望耶和華的必重新得力」"},
+  {id:"jer",name:"耶利米書",abbr:"耶",testament:"OT",chapters:52,playlist:"PLFZQax_1Kmu3VJXPf5V7o9h1xLxr5yJNz",key:"眼淚先知——神的心碎與審判，新約預言，「我要將律法放在他們裡面」"},
+  {id:"lam",name:"耶利米哀歌",abbr:"哀",testament:"OT",chapters:5,playlist:"PLFZQax_1Kmu0FfTinvRVFrXGNbdXCpuIX",key:"在廢墟中的盼望——「耶和華的慈愛不至消滅，祂的憐憫不至斷絕」"},
+  {id:"ezk",name:"以西結書",abbr:"結",testament:"OT",chapters:48,playlist:"PLFZQax_1Kmu1uXf7EjYmOGCRDAoG9Pksy",key:"異象與復興——枯骨復活、新心新靈，神的榮耀離開又歸回"},
+  {id:"dan",name:"但以理書",abbr:"但",testament:"OT",chapters:12,playlist:"PLFZQax_1Kmu3yJk_fzFkc13qNXDYcuYHB",key:"忠信在壓迫中——但以理與三友的信心，神掌管世界的歷史"},
+  {id:"hos",name:"何西阿書",abbr:"何",testament:"OT",chapters:14,playlist:"PLFZQax_1Kmu3mJlF5cnDkIFnF1I3cQ_wg",key:"神的愛不離棄——先知娶淫婦預表神對以色列的愛，「我喜愛憐恤，不喜愛祭祀」"},
+  {id:"jol",name:"約珥書",abbr:"珥",testament:"OT",chapters:3,playlist:"PLFZQax_1Kmu2X9kDV45oO9i2Y_fBq5Zc5",key:"末後的日子——蝗蟲的審判與聖靈的應許，「凡求告主名的就必得救」"},
+  {id:"amo",name:"阿摩司書",abbr:"摩",testament:"OT",chapters:9,playlist:"PLFZQax_1Kmu0TbIHiV9V1RzJY-xA4YjSc",key:"公義先知——對社會不公的審判，「惟願公平如大水滾滾，使公義如江河滔滔」"},
+  {id:"oba",name:"俄巴底亞書",abbr:"俄",testament:"OT",chapters:1,playlist:"PLFZQax_1Kmu3Nj7wfWbbD2H-HYO8Cq7_1",key:"以東的審判——驕傲必被傾倒，對欺壓以色列者的審判"},
+  {id:"jon",name:"約拿書",abbr:"拿",testament:"OT",chapters:4,playlist:"PLFZQax_1Kmu1a2HdMl2LEdIzwoxpjnKBs",key:"逃跑的先知——神追尋悖逆者，「你倒要憐憫那株蓖麻，何況這尼尼微大城？」"},
+  {id:"mic",name:"彌迦書",abbr:"彌",testament:"OT",chapters:7,playlist:"PLFZQax_1Kmu1j_O0D78p8VaXH_QKIB32I",key:"公義憐憫謙卑——「行公義、好憐憫、存謙卑的心與你的神同行」"},
+  {id:"nah",name:"那鴻書",abbr:"鴻",testament:"OT",chapters:3,playlist:"PLFZQax_1Kmu0sQJBMjJj_j2VCxv8j8Q5r",key:"尼尼微傾倒——神對驕傲強國的審判，公義必然追上作惡者"},
+  {id:"hab",name:"哈巴谷書",abbr:"哈",testament:"OT",chapters:3,playlist:"PLFZQax_1Kmu0qeSzJB-NuN2FMpU6AqJgX",key:"信仰的掙扎——「義人必因信得生」，在困惑中仍選擇讚美神"},
+  {id:"zep",name:"西番雅書",abbr:"番",testament:"OT",chapters:3,playlist:"PLFZQax_1Kmu1n5u5JMxobaTT0EWYMByrc",key:"審判與喜樂——「耶和華你的神在你中間是大能的救主，祂必歡欣喜樂」"},
+  {id:"hag",name:"哈該書",abbr:"該",testament:"OT",chapters:2,playlist:"PLFZQax_1Kmu21Z-PY_CU0mBNWFWqNJnpP",key:"重建優先序——「你們要省察自己的行為」，先建神的殿再求自己的繁榮"},
+  {id:"zec",name:"撒迦利亞書",abbr:"亞",testament:"OT",chapters:14,playlist:"PLFZQax_1Kmu3CHa0s0SU5jlnQ9qmBT_Rx",key:"彌賽亞的來臨——八個異象，「看哪，你的王來到你這裡」，預言最多的先知書之一"},
+  {id:"mal",name:"瑪拉基書",abbr:"瑪",testament:"OT",chapters:4,playlist:"PLFZQax_1Kmu3x3WL1TRiLJ6_EzM6DJxTA",key:"舊約最後呼籲——責問冷漠的敬拜，預告以利亞再來，等待四百年的沉默"},
+  // ── 新約 ──
+  {id:"mat",name:"馬太福音",abbr:"太",testament:"NT",chapters:28,playlist:"PLFZQax_1Kmu0o3XhWJWKxF6pdsa4zazZ9",key:"彌賽亞君王——給猶太人寫的耶穌生平，山上寶訓，天國比喻，大使命"},
+  {id:"mrk",name:"馬可福音",abbr:"可",testament:"NT",chapters:16,playlist:"PLFZQax_1Kmu3HbukY6-gGi3-SUp22KsVQ",key:"行動的僕人——最早的福音書，節奏最快，耶穌立即行動的生命力"},
+  {id:"luk",name:"路加福音",abbr:"路",testament:"NT",chapters:24,playlist:"PLFZQax_1Kmu0X4axQEpyHBMo_LLVgLiJU",key:"外邦人的救主——浪子回頭、好撒馬利亞人，耶穌的使命為最低微的人"},
+  {id:"jhn",name:"約翰福音",abbr:"約",testament:"NT",chapters:21,playlist:"PLFZQax_1Kmu1xinjDBmArU1kvuXQjysaZ",key:"神子的榮耀——七個神蹟、七個「我是」，「神愛世人，甚至將祂的獨生子賜給他們」"},
+  {id:"act",name:"使徒行傳",abbr:"徒",testament:"NT",chapters:28,playlist:"PLFZQax_1Kmu3V3Rg2dSPDVLRgD2MBIbPE",key:"教會誕生——五旬節聖靈降臨，保羅三次宣教旅行，福音從耶路撒冷到羅馬"},
+  {id:"rom",name:"羅馬書",abbr:"羅",testament:"NT",chapters:16,playlist:"PLFZQax_1Kmu0EF2PMvxJ-mQI0v2GCIDJ6",key:"神學系統——因信稱義、聖靈生命、神的揀選、活祭奉獻，保羅神學精華"},
+  {id:"1co",name:"哥林多前書",abbr:"林前",testament:"NT",chapters:16,playlist:"PLFZQax_1Kmu1TS9SSnfRbXD4UhGzSB1M7",key:"教會實踐——分裂問題、恩賜、愛的真諦，「如今常存的有信、有望、有愛，但最大的是愛」"},
+  {id:"2co",name:"哥林多後書",abbr:"林後",testament:"NT",chapters:13,playlist:"PLFZQax_1Kmu0JuN8LK0CnvECiYFXlLv4V",key:"軟弱中的力量——保羅的苦難與安慰，「我的恩典夠你用，我的能力是在人的軟弱上顯得完全」"},
+  {id:"gal",name:"加拉太書",abbr:"加",testament:"NT",chapters:6,playlist:"PLFZQax_1Kmu1Vr8T0J0MXDrNJlPBVAx7y",key:"恩典自由——反對律法主義，「聖靈所結的果子，就是仁愛、喜樂、和平…」"},
+  {id:"eph",name:"以弗所書",abbr:"弗",testament:"NT",chapters:6,playlist:"PLFZQax_1Kmu1m1S5qhWrRJGe3XO-a4e5E",key:"在基督裡的身分——揀選、救贖、全副軍裝，「要愛妻子如同基督愛教會」"},
+  {id:"php",name:"腓立比書",abbr:"腓",testament:"NT",chapters:4,playlist:"PLFZQax_1Kmu0LCO7J_Xjbc6GXXT4Y8Ke",key:"喜樂書信——從監獄寫出的喜樂，「靠著那加給我力量的，凡事都能做」"},
+  {id:"col",name:"歌羅西書",abbr:"西",testament:"NT",chapters:4,playlist:"PLFZQax_1Kmu1JhSoRpGl6wGRYMt44h9IM",key:"基督的首位——反對假教師，基督是萬有之首，「凡你們所做的，都要從心裡做」"},
+  {id:"1th",name:"帖撒羅尼迦前書",abbr:"帖前",testament:"NT",chapters:5,playlist:"PLFZQax_1Kmu2-L7VxPH_yJsTFXdFfXTLl",key:"再來的盼望——鼓勵面對逼迫，「凡事謝恩，因為這是神在基督耶穌裡向你們所定的旨意」"},
+  {id:"2th",name:"帖撒羅尼迦後書",abbr:"帖後",testament:"NT",chapters:3,playlist:"PLFZQax_1Kmu0Ni1jIgHMQl-RrLdXEcQhf",key:"末世澄清——糾正錯誤的末世觀，「不勞動的，不得吃飯」"},
+  {id:"1ti",name:"提摩太前書",abbr:"提前",testament:"NT",chapters:6,playlist:"PLFZQax_1Kmu1w3c3JNJwVXQR4OmmMGaXD",key:"教會領導學——選立長老執事的標準，「你要為信徒作榜樣」"},
+  {id:"2ti",name:"提摩太後書",abbr:"提後",testament:"NT",chapters:4,playlist:"PLFZQax_1Kmu0OFHB_oBiqR5g1Io_3TvzP",key:"保羅的臨別遺言——「那美好的仗我已打過，當跑的路我已跑盡，所信的道我已守住」"},
+  {id:"tit",name:"提多書",abbr:"多",testament:"NT",chapters:3,playlist:"PLFZQax_1Kmu3n6sUpkTMX5Jrj2K8FBXIY",key:"健全的教義——教會秩序與生活見證，「凡事以自身為善事的榜樣」"},
+  {id:"phm",name:"腓利門書",abbr:"門",testament:"NT",chapters:1,playlist:"PLFZQax_1Kmu2k_t_-oS5qT0KE0J0wlCRp",key:"饒恕的實踐——保羅為逃跑奴隸阿尼西母求情，愛的勸勉勝過命令"},
+  {id:"heb",name:"希伯來書",abbr:"來",testament:"NT",chapters:13,playlist:"PLFZQax_1Kmu1p4G77xtqBj2qjTyMtgNl6",key:"更美的約——基督超越舊約制度，「信就是所望之事的實底」，信心英雄榜"},
+  {id:"jas",name:"雅各書",abbr:"雅",testament:"NT",chapters:5,playlist:"PLFZQax_1Kmu3RaVh1IeyR4LWE2cjX2BFg",key:"信心的行動——「信心沒有行為是死的」，實踐性最強的書信，舌頭的管理"},
+  {id:"1pe",name:"彼得前書",abbr:"彼前",testament:"NT",chapters:5,playlist:"PLFZQax_1Kmu2R8LlRJsHZlHqVEHxq23MN",key:"在苦難中盼望——「你們要將一切的憂慮卸給神，因為祂顧念你們」"},
+  {id:"2pe",name:"彼得後書",abbr:"彼後",testament:"NT",chapters:3,playlist:"PLFZQax_1Kmu3GnKivh8e4XAVUiXK3D5hQ",key:"防假教師——警戒假先知，「耶和華不誤定所應許的，乃是寬容你們，不願有一人沉淪」"},
+  {id:"1jn",name:"約翰一書",abbr:"約一",testament:"NT",chapters:5,playlist:"PLFZQax_1Kmu0IWxD5oEYqhH5bXHwkqBoG",key:"愛的定義——「神就是愛」，真假信徒的辨別，「我們愛，因為神先愛我們」"},
+  {id:"2jn",name:"約翰二書",abbr:"約二",testament:"NT",chapters:1,playlist:"PLFZQax_1Kmu3dkMa4s9y3IJW4P30i3IeY",key:"行在真理中——短信給蒙揀選的婦人，真理的愛護與假教師的警戒"},
+  {id:"3jn",name:"約翰三書",abbr:"約三",testament:"NT",chapters:1,playlist:"PLFZQax_1Kmu1sC9y_HOGi5e3YfFk5XoJz",key:"款待與見證——稱讚該猶款待傳道人，責備丟提腓的驕傲"},
+  {id:"jud",name:"猶大書",abbr:"猶",testament:"NT",chapters:1,playlist:"PLFZQax_1Kmu0kgXBaIWoNq_LTTZE5L5bJ",key:"為真道爭辯——警告假師傅的滲入，「能保守你們不失腳的，叫你們無瑕疵」"},
+  {id:"rev",name:"啟示錄",abbr:"啟",testament:"NT",chapters:22,playlist:"PLFZQax_1Kmu3OAWXuOVMkMa7hSq0fNRe7",key:"最後的得勝——七封信、七印、新天新地，「神要親自與他們同在，擦去他們一切的眼淚」"},
+];
+
+// ════════════════════════════
+// 逐章關鍵詞（取 40 卷重點章節，其餘留 placeholder 讓工具可用）
+// ════════════════════════════
+const CH_KEYS={
+  gen:{1:"創造天地，神造人按祂形像",2:"伊甸園，男女合一",3:"墮落，原罪，神的應許",12:"亞伯拉罕蒙召，三重應許",37:"約瑟的夢，被兄長出賣",39:"約瑟拒絕誘惑，被誣告入獄",41:"約瑟解法老夢，成為宰相",50:"約瑟饒恕兄長，「神的意思是好的」"},
+  exo:{1:"以色列人在埃及為奴",3:"神在荊棘中呼召摩西，「我是自有永有的」",14:"過紅海，神的拯救",19:"西奈山顯現，立約",20:"十誡頒布"},
+  lev:{16:"贖罪日，大祭司進入至聖所",19:"「愛鄰舍如同自己」"},
+  psa:{23:"耶和華是我的牧者",91:"住在至高者隱密處",100:"全地向神歡呼",121:"我的幫助從何而來",139:"我受造奇妙可畏"},
+  pro:{3:"當信靠耶和華，不可倚靠自己聰明",31:"才德的婦人"},
+  isa:{40:"那仰望耶和華的必重新得力",53:"受苦的僕人，為我們的過犯被刺透"},
+  mrk:{1:"耶穌受洗、呼召門徒",4:"撒種比喻，好土結百倍",8:"彼得認信：你是基督",16:"復活，大使命"},
+  luk:{10:"好撒馬利亞人，馬大與馬利亞",15:"浪子回頭，天父的心"},
+  jhn:{1:"道成肉身，「神就是道」",3:"「神愛世人，甚至將祂獨生子賜給他們」",11:"拉撒路復活，「復活在我，生命也在我」",14:"「我就是道路、真理、生命」"},
+  act:{1:"聖靈降臨的預言",2:"五旬節，三千人悔改受洗",9:"掃羅在大馬士革歸主"},
+  rom:{3:"「沒有義人，連一個也沒有」",5:"「我們既因信稱義，就與神相和」",8:"「那些在基督裡的，就不被定罪了」",12:"「獻上活祭，不要效法這個世界」"},
+  eph:{1:"在基督裡被揀選",2:"「你們得救是本乎恩，也因著信」",6:"全副軍裝，為真理爭戰"},
+  php:{4:"「靠著那加給我力量的，凡事都能做」"},
+  heb:{11:"信心英雄榜，「信就是所望之事的實底」"},
+  jas:{1:"試煉中的喜樂，「要速聽，緩言，緩怒」",2:"「信心沒有行為是死的」"},
+  rev:{1:"約翰的異象，永活的主",3:"給老底嘉教會，「我站在門外叩門」",21:"新天新地，神擦去一切眼淚",22:"生命水白白取用，「主耶穌啊，我願你來」"},
+};
+
+function chKey(bookId, chNum){
+  return CH_KEYS[bookId]?.[chNum] || null;
+}
+
+// ════════════════════════════
+// STATE
+// ════════════════════════════
+let state={};
+const SK='btr66_v1';
+const SD='btr66_days';
+function load(){try{const s=localStorage.getItem(SK);if(s)state=JSON.parse(s);}catch(e){}}
+function save(){try{localStorage.setItem(SK,JSON.stringify(state));}catch(e){}}
+load();
+
+function chDone(bookId,ch){return !!state[bookId+'_'+ch];}
+function setChDone(bookId,ch,val){state[bookId+'_'+ch]=val;save();}
+function bookDoneCount(b){let n=0;for(let i=1;i<=b.chapters;i++)if(chDone(b.id,i))n++;return n;}
+function bookFullDone(b){return bookDoneCount(b)===b.chapters;}
+function today(){return new Date().toISOString().slice(0,10);}
+
+function addToday(){
+  let days=[];try{const d=localStorage.getItem(SD);if(d)days=JSON.parse(d);}catch(e){}
+  const t=today();
+  if(!days.includes(t)){days.push(t);try{localStorage.setItem(SD,JSON.stringify(days));}catch(e){}}
+  return days;
+}
+function getStreak(){
+  let days=[];try{const d=localStorage.getItem(SD);if(d)days=JSON.parse(d);}catch(e){}
+  days.sort();
+  let streak=0,cur=new Date();
+  for(let i=days.length-1;i>=0;i--){
+    const d=new Date(days[i]+'T00:00:00');
+    const diff=Math.round((cur-d)/86400000);
+    if(diff<=1){streak++;cur=d;}else break;
+  }
+  return{streak,days};
+}
+
+// ════════════════════════════
+// DASHBOARD
+// ════════════════════════════
+function updateDash(){
+  let totalDone=0,totalAll=0,booksDone=0;
+  let otDone=0,otAll=0,ntDone=0,ntAll=0;
+  BIBLE.forEach(b=>{
+    const d=bookDoneCount(b);
+    totalDone+=d; totalAll+=b.chapters;
+    if(bookFullDone(b))booksDone++;
+    if(b.testament==='OT'){otDone+=d;otAll+=b.chapters;}
+    else{ntDone+=d;ntAll+=b.chapters;}
+  });
+  document.getElementById('d-done').textContent=totalDone;
+  document.getElementById('d-total').textContent=totalAll;
+  document.getElementById('d-pct').textContent=Math.round(totalDone/totalAll*100)+'%';
+  document.getElementById('d-books').textContent=booksDone;
+  document.getElementById('d-left').textContent=totalAll-totalDone;
+  const{streak,days}=getStreak();
+  document.getElementById('d-streak').textContent=streak;
+  // OT/NT progress
+  document.getElementById('p-ot').style.width=Math.round(otDone/otAll*100)+'%';
+  document.getElementById('p-ot-txt').textContent=otDone+'/'+otAll;
+  document.getElementById('p-nt').style.width=Math.round(ntDone/ntAll*100)+'%';
+  document.getElementById('p-nt-txt').textContent=ntDone+'/'+ntAll;
+  // streak dots
+  const last7=Array.from({length:7},(_,i)=>{const dt=new Date();dt.setDate(dt.getDate()-(6-i));return dt.toISOString().slice(0,10);});
+  document.getElementById('streak-dots').innerHTML=last7.map(dt=>{
+    const wd=['日','一','二','三','四','五','六'][new Date(dt+'T00:00:00').getDay()];
+    return`<div style="text-align:center"><div class="dot${days.includes(dt)?' hit':''}" title="${dt}"></div><div class="dot-sub">${wd}</div></div>`;
+  }).join('');
+  // next chapter
+  renderNow();
+}
+
+function findNext(){
+  for(const b of BIBLE){
+    for(let ch=1;ch<=b.chapters;ch++){
+      if(!chDone(b.id,ch))return{b,ch};
+    }
+  }
+  return null;
+}
+
+function renderNow(){
+  const next=findNext();
+  const el=document.getElementById('now-section');
+  if(!next){el.innerHTML=`<div class="now-card"><div class="now-tag">🎉 完成</div><div class="now-book">恭喜！66卷已全部讀完</div></div>`;return;}
+  const {b,ch}=next;
+  const key=chKey(b.id,ch);
+  const plUrl=`https://www.youtube.com/playlist?list=${b.playlist}`;
+  // 嘗試連結到該章（YouTube playlist 無法直接跳章，但可開播放清單從頭播）
+  el.innerHTML=`
+    <div class="now-card">
+      <div class="now-tag">📖 繼續讀經</div>
+      <div class="now-book">${b.name}</div>
+      <div class="now-ch">第 ${ch} 章 ／ 共 ${b.chapters} 章</div>
+      ${key?`<div class="now-key">💡 ${key}</div>`:''}
+      <div class="btn-row">
+        <a class="btn-watch" href="${plUrl}" target="_blank">▶ 開啟 JAM 影片</a>
+        <button class="btn-done" onclick="markAndNext('${b.id}',${ch})">✓ 完成</button>
+      </div>
+    </div>`;
+}
+
+function markAndNext(bookId,ch){
+  setChDone(bookId,ch,true);
+  addToday();
+  updateDash();
+  renderBookList();
+}
+
+// ════════════════════════════
+// BOOK LIST
+// ════════════════════════════
+function renderBookList(filter=''){
+  const el=document.getElementById('book-list');
+  let html='';
+  let curTestament='';
+  BIBLE.forEach(b=>{
+    if(filter && !b.name.includes(filter) && !b.abbr.includes(filter))return;
+    if(b.testament!==curTestament){
+      curTestament=b.testament;
+      html+=`<div class="testament-header">${curTestament==='OT'?'📜 舊約（39卷）':'✝️ 新約（27卷）'}</div>`;
+    }
+    const done=bookDoneCount(b);
+    const pct=Math.round(done/b.chapters*100);
+    const full=done===b.chapters;
+    const none=done===0;
+    const ckClass=full?'done':none?'':'partial';
+    const pctClass=full?'pct-done':none?'pct-none':'pct-part';
+    html+=`<div class="book-row" onclick="openDetail('${b.id}')">
+      <div class="bk-check ${ckClass}">
+        ${full?'<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:white;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+      </div>
+      <div class="bk-info">
+        <div class="bk-name">${b.name}</div>
+        <div class="bk-sub">${b.testament==='OT'?'舊約':'新約'} · ${b.chapters}章</div>
+      </div>
+      <div class="bk-right">
+        <div class="bk-cnt">${done}/${b.chapters}</div>
+        <div class="bk-pct ${pctClass}">${pct}%</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html||'<div style="color:var(--text3);padding:20px 0;text-align:center">找不到相符的書卷</div>';
+}
+
+// ════════════════════════════
+// BOOK DETAIL
+// ════════════════════════════
+let activeBook=null;
+let activeChCard=null;
+
+function openDetail(bookId){
+  activeBook=BIBLE.find(b=>b.id===bookId);
+  if(!activeBook)return;
+  document.getElementById('book-list-view').style.display='none';
+  document.getElementById('book-detail-view').style.display='block';
+  renderDetail();
+}
+
+function closeDetail(){
+  activeBook=null;activeChCard=null;
+  document.getElementById('book-list-view').style.display='block';
+  document.getElementById('book-detail-view').style.display='none';
+}
+
+function renderDetail(){
+  const b=activeBook;
+  const plUrl=`https://www.youtube.com/playlist?list=${b.playlist}`;
+  let html=`<div style="margin-bottom:12px">
+    <div style="font-size:20px;font-weight:700;margin-bottom:2px">${b.name}</div>
+    <div style="font-size:12px;color:var(--text3)">${b.testament==='OT'?'舊約':'新約'} · ${b.chapters}章 · 完成${bookDoneCount(b)}章</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">${b.key}</div>
+    <a href="${plUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:7px 14px;background:var(--blue);color:#fff;border-radius:var(--r);font-size:13px;font-weight:600;text-decoration:none">▶ 開啟整卷播放清單</a>
+  </div>`;
+  for(let ch=1;ch<=b.chapters;ch++){
+    const done=chDone(b.id,ch);
+    const key=chKey(b.id,ch);
+    html+=`<div class="ch-card${done?' done-card':''}" id="chc-${b.id}-${ch}" onclick="toggleChCard('${b.id}',${ch})">
+      <div class="ch-top">
+        <div class="${done?'ch-ck done':'ch-ck'}">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="${done?'ch-num done-txt':'ch-num'}">第 ${ch} 章</div>
+        <a class="ch-watch" href="${plUrl}" target="_blank" onclick="event.stopPropagation()">▶ 播</a>
+      </div>
+      ${key?`<div class="ch-detail">
+        <div class="ch-key">💡 ${key}</div>
+        <button class="ch-mark-btn ${done?'redone':'undone'}" onclick="event.stopPropagation();toggleChDone('${b.id}',${ch})">${done?'取消完成':'✓ 標記完成'}</button>
+      </div>`:`<div class="ch-detail">
+        <button class="ch-mark-btn ${done?'redone':'undone'}" onclick="event.stopPropagation();toggleChDone('${b.id}',${ch})">${done?'取消完成':'✓ 標記完成'}</button>
+      </div>`}
+    </div>`;
+  }
+  document.getElementById('detail-content').innerHTML=html;
+}
+
+function toggleChCard(bookId,ch){
+  const id=`chc-${bookId}-${ch}`;
+  if(activeChCard===id){
+    document.getElementById(id)?.classList.remove('active');
+    activeChCard=null;
+  }else{
+    if(activeChCard)document.getElementById(activeChCard)?.classList.remove('active');
+    document.getElementById(id)?.classList.add('active');
+    activeChCard=id;
+  }
+}
+
+function toggleChDone(bookId,ch){
+  const cur=chDone(bookId,ch);
+  setChDone(bookId,ch,!cur);
+  if(!cur)addToday();
+  updateDash();
+  renderBookList();
+  renderDetail();
+}
+
+// ════════════════════════════
+// SEARCH
+// ════════════════════════════
+function doSearch(val){
+  const el=document.getElementById('search-results');
+  if(!val.trim()){el.innerHTML='';return;}
+  const results=BIBLE.filter(b=>b.name.includes(val)||b.abbr.includes(val));
+  if(!results.length){el.innerHTML='<div style="color:var(--text3);padding:12px 0">找不到相符書卷</div>';return;}
+  el.innerHTML=results.map(b=>{
+    const done=bookDoneCount(b);
+    const pct=Math.round(done/b.chapters*100);
+    const full=done===b.chapters;
+    const none=done===0;
+    const pctClass=full?'pct-done':none?'pct-none':'pct-part';
+    return`<div class="book-row" onclick="goTab('books',document.querySelector('.nb:nth-child(2)'));openDetail('${b.id}')">
+      <div class="bk-info">
+        <div class="bk-name">${b.name}</div>
+        <div class="bk-sub">${b.testament==='OT'?'舊約':'新約'} · ${b.chapters}章</div>
+      </div>
+      <div class="bk-right">
+        <div class="bk-cnt">${done}/${b.chapters}</div>
+        <div class="bk-pct ${pctClass}">${pct}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════
+// NAV
+// ════════════════════════════
+function goTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ════════════════════════════
+// RESET
+// ════════════════════════════
+function doReset(){
+  if(!confirm('確定清除所有進度？此操作無法復原。'))return;
+  state={};save();
+  updateDash();renderBookList();
+  if(activeBook)renderDetail();
+}
+
+// ════════════════════════════
+// INIT
+// ════════════════════════════
+renderBookList();
+updateDash();
+</script>
+</body>
+</html>
